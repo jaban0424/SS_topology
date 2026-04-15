@@ -44,7 +44,7 @@ SS_C_filter = 10e-6;
 SS_SoftStarting_delayed = 0.01e-3;
 SS_SoftStarting_TransientTime = 0.2e-3;
 SS_SoftStarting_StartPwmTime = 0.01e-3;
-SS_SoftStarting_StopPwmTime = 3e-3; %%%%%%%%%%%%%%%%
+SS_SoftStarting_StopPwmTime = 3 e-3; %%%%%%%%%%%%%%%%
 
 SS_SoftStarting_slope = SS_Vin / SS_SoftStarting_TransientTime;
 
