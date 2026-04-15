@@ -18,7 +18,7 @@ refSignalName = 'Vi';    % 위상 0도 기준 신호 (Vin)
 f0 = 85e3;       % 기본 주파수 (Hz)
 T = 1 / f0;      % 1주기 시간 (s)
 
-tEnd = 6e-3;     % 측정 끝점
+tEnd = 3e-3;     % 측정 끝점
 num_periods = 2; % 채취할 주기 수 (2주기로 축소)
 tStart = tEnd - num_periods * T;
 

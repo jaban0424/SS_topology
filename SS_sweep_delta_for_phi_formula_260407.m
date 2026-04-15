@@ -2,7 +2,13 @@
 % 정류기 입력 전압 위상(\phi) 해를 delta에 대해 sweep하며 추적 (Grid Search 방식 차용)
 %
 % =========================================================================
+% [현재버전] v1.3
+% [마지막 수정시각] 2026/04/15 21:24:46 KST
+%
 % [버전 기록]
+% v1.3 : (2026-04-15 21:24:46)
+%        - 외부(compare)에서 호출할 때 내부 figure 출력을 끌 수 있는 enable_sweep_plots 옵션 추가
+%        - sweep 스크립트가 데이터 생성과 시각화를 분리해서 동작하도록 정리
 % v1.2 : (2026-04-07 21:30:00)
 %        - 통합 비교 스펙트럼(3D)을 위해 각 차수별 위상 데이터(Ism_ang_all) 추출 및 저장 로직 추가
 % v1.1 : (2026-04-07 20:47:08) 
@@ -50,6 +56,7 @@
     % 해석할 고조파 차수 및 delta sweep 범위
     if ~exist('m_list', 'var'), m_list = 1:2:101; end
     if ~exist('delta_list', 'var'), delta_list = linspace(0, 0.8, 41); end
+    if ~exist('enable_sweep_plots', 'var'), enable_sweep_plots = true; end
 
     % 3D 스펙트럼에서 그래프로 보여줄 최대 고조파 차수 한계
     max_m_plot = 21;
@@ -178,49 +185,51 @@
     %% =========================
     % 결과 Plot
     % ==========================
-    figure('Name', 'SS Topology Delta Sweep Result', 'Color', 'w', 'Position', [100 100 1000 600]);
-    
-    % [1] Delta vs Phi
-    subplot(3,1,1);
-    plot(delta_list, phi_best_list, '-o', 'LineWidth', 1.8, 'MarkerSize', 4, 'MarkerFaceColor', 'b');
-    grid on;
-    ylabel('Best \phi [deg]');
-    title('Relative Phase \phi vs Detuning \delta');
-    
-    % [2] Delta vs Current Magnitude
-    subplot(3,1,2);
-    plot(delta_list, Is_rms_list, '-o', 'LineWidth', 1.8, 'MarkerSize', 4, 'DisplayName', 'Total RMS');
-    hold on;
-    plot(delta_list, Is_fund_rms_list, '-x', 'LineWidth', 1.5, 'MarkerSize', 4, 'DisplayName', 'Fundamental RMS');
-    grid on;
-    ylabel('Current [A_{rms}]');
-    title('Secondary Current Magnitude vs Detuning \delta');
-    legend('Location', 'best');
-    
-    % [3] Delta vs Search Error
-    subplot(3,1,3);
-    plot(delta_list, err_best_list, '-s', 'LineWidth', 1.5, 'MarkerSize', 4, 'Color', 'r');
-    grid on;
-    xlabel('Detuning Parameter \delta');
-    ylabel('Mismatch Error [deg]');
-    title('Zero-Crossing Target Mismatch Error vs Detuning \delta');
-    
-    % [4] 3D Frequency Spectrum Plot
-    figure('Name', '3D Frequency Spectrum', 'Color', 'w', 'Position', [150 150 800 600]);
-    
-    % 최대 고조파수 한계까지만 데이터 자르기
-    plot_idx = m_list <= max_m_plot;
-    M_list_plot = m_list(plot_idx);
-    Ism_mag_plot = Ism_mag_all(plot_idx, :);
-    
-    [DeltaGrid, MGrid] = meshgrid(delta_list, M_list_plot);
-    surf(DeltaGrid, MGrid, Ism_mag_plot, 'FaceAlpha', 0.85, 'EdgeColor', 'interp');
-    grid on;
-    xlabel('Detuning \delta');
-    ylabel('Harmonic Order m');
-    zlabel('Current Magnitude |I_{sm}| [A]');
-    title(sprintf('3D Frequency Spectrum vs Detuning \\delta (Up to m=%d)', max_m_plot));
-    view(-45, 30);
+    if enable_sweep_plots
+        figure('Name', 'SS Topology Delta Sweep Result', 'Color', 'w', 'Position', [100 100 1000 600]);
+        
+        % [1] Delta vs Phi
+        subplot(3,1,1);
+        plot(delta_list, phi_best_list, '-o', 'LineWidth', 1.8, 'MarkerSize', 4, 'MarkerFaceColor', 'b');
+        grid on;
+        ylabel('Best \phi [deg]');
+        title('Relative Phase \phi vs Detuning \delta');
+        
+        % [2] Delta vs Current Magnitude
+        subplot(3,1,2);
+        plot(delta_list, Is_rms_list, '-o', 'LineWidth', 1.8, 'MarkerSize', 4, 'DisplayName', 'Total RMS');
+        hold on;
+        plot(delta_list, Is_fund_rms_list, '-x', 'LineWidth', 1.5, 'MarkerSize', 4, 'DisplayName', 'Fundamental RMS');
+        grid on;
+        ylabel('Current [A_{rms}]');
+        title('Secondary Current Magnitude vs Detuning \delta');
+        legend('Location', 'best');
+        
+        % [3] Delta vs Search Error
+        subplot(3,1,3);
+        plot(delta_list, err_best_list, '-s', 'LineWidth', 1.5, 'MarkerSize', 4, 'Color', 'r');
+        grid on;
+        xlabel('Detuning Parameter \delta');
+        ylabel('Mismatch Error [deg]');
+        title('Zero-Crossing Target Mismatch Error vs Detuning \delta');
+        
+        % [4] 3D Frequency Spectrum Plot
+        figure('Name', '3D Frequency Spectrum', 'Color', 'w', 'Position', [150 150 800 600]);
+        
+        % 최대 고조파수 한계까지만 데이터 자르기
+        plot_idx = m_list <= max_m_plot;
+        M_list_plot = m_list(plot_idx);
+        Ism_mag_plot = Ism_mag_all(plot_idx, :);
+        
+        [DeltaGrid, MGrid] = meshgrid(delta_list, M_list_plot);
+        surf(DeltaGrid, MGrid, Ism_mag_plot, 'FaceAlpha', 0.85, 'EdgeColor', 'interp');
+        grid on;
+        xlabel('Detuning \delta');
+        ylabel('Harmonic Order m');
+        zlabel('Current Magnitude |I_{sm}| [A]');
+        title(sprintf('3D Frequency Spectrum vs Detuning \\delta (Up to m=%d)', max_m_plot));
+        view(-45, 30);
+    end
     
 % end % 함수 본문 종결 제거
 

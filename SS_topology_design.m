@@ -21,7 +21,7 @@ SS_Ls = 155e-6;
 SS_k = 0.2;
 SS_M = SS_k * sqrt(SS_Lp * SS_Ls);
 
-SS_delta = 0.1; %%%% 디튜닝!!!!!
+SS_delta = 0.8; %%%% 디튜닝!!!!!
 
 % SS_Cp = 16.537e-9;
 % SS_Cs = 22.619e-9;
@@ -39,12 +39,12 @@ SS_R = SS_R3;
 SS_Rac = SS_R * 8 / pi^2;
 
 SS_L_filter = 10e-6; % 이거 안 쓰일 수도
-SS_C_filter = 20e-6;
+SS_C_filter = 10e-6;
 
 SS_SoftStarting_delayed = 0.01e-3;
 SS_SoftStarting_TransientTime = 0.2e-3;
 SS_SoftStarting_StartPwmTime = 0.01e-3;
-SS_SoftStarting_StopPwmTime = 6e-3; %%%%%%%%%%%%%%%%
+SS_SoftStarting_StopPwmTime = 3e-3; %%%%%%%%%%%%%%%%
 
 SS_SoftStarting_slope = SS_Vin / SS_SoftStarting_TransientTime;
 

@@ -1,6 +1,12 @@
 %% SS_sweep_delta_for_phi_Sumulink_260407.m
 % =========================================================================
+% [현재버전] v1.2
+% [마지막 수정시각] 2026/04/15 21:24:46 KST
+%
 % [버전 기록]
+% v1.2 : (2026-04-15 21:24:46)
+%        - 고조파 위상 측정을 sin 기준 + Vi fundamental = 0 deg 기준으로 통일
+%        - 외부(compare)에서 호출할 때 내부 figure 출력을 끌 수 있는 enable_sweep_plots 옵션 추가
 % v1.1 : (2026-04-07 21:30:00)
 %        - 통합 비교 스펙트럼(3D)을 위해 각 차수별 위상 데이터(Ism_sim_ang_all) 추출 및 저장 로직 추가
 % v1.0 : (2026-04-07 03:09:12) delta 스윕에 따른 수식(\phi) 해와 
@@ -19,6 +25,7 @@ else
     num_points = 11; % 스윕 배치의 개수
     delta_vec = linspace(delta_min, delta_max, num_points);
 end
+if ~exist('enable_sweep_plots', 'var'), enable_sweep_plots = true; end
 
 % 병렬 처리 워커 수 설정
 num_workers = 5;
@@ -168,13 +175,15 @@ end
 
 
 %% ===================== (E) 통합 플롯 시각화 =====================
-figure('Name', 'Detuning \delta vs \phi Phase Shift', 'Color', 'w', 'Position', [200 200 700 500]);
-plot(delta_vec, phi_sim_deg, '-rx', 'LineWidth', 2, 'MarkerSize', 8, 'DisplayName', '시뮬레이션 관측 \phi (Vac - Vi 기본파 위상차)');
-grid on; hold on;
-xlabel('\delta = \DeltaC_s / C_{s,res} (디튜닝 수치)');
-ylabel('Relative Phase \phi [deg]');
-title(sprintf('디튜닝 수치(\\delta)에 따른 2차측 상대 위상(\\phi) 변화 검증\n(마지막 %d주기 AC페이저 측정)', num_turnoff_periods));
-legend('Location', 'best');
+if enable_sweep_plots
+    figure('Name', 'Detuning \delta vs \phi Phase Shift', 'Color', 'w', 'Position', [200 200 700 500]);
+    plot(delta_vec, phi_sim_deg, '-rx', 'LineWidth', 2, 'MarkerSize', 8, 'DisplayName', '시뮬레이션 관측 \phi (Vac - Vi 기본파 위상차)');
+    grid on; hold on;
+    xlabel('\delta = \DeltaC_s / C_{s,res} (디튜닝 수치)');
+    ylabel('Relative Phase \phi [deg]');
+    title(sprintf('디튜닝 수치(\\delta)에 따른 2차측 상대 위상(\\phi) 변화 검증\n(마지막 %d주기 AC페이저 측정)', num_turnoff_periods));
+    legend('Location', 'best');
+end
 
 %% ===================== (F) 메모리/풀 정리 =====================
 clear simIn out logs Vi_ts Vac_ts Vi_Ph Vac_Ph;
