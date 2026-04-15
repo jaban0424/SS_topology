@@ -209,10 +209,8 @@ is_total_s = zeros(size(theta_vec));
 
 for m_i = 1:length(m_list)
     m = m_list(m_i);
-    % Simulink는 exp(-j*w*t) 로 페이저를 추출했으므로 수학적 본질은 코사인 기준.
-    % 즉 파형은 sqrt(2)*|X|*cos(m*wt + ang) 형태로 복원됨.
-    % 사용자의 기호(sin 기준)에 맞추어 cos(x) = sin(x + pi/2) 를 이용해 sin으로 표현.
-    i_m = sqrt(2) * mag_s(m_i) .* sin(m*theta_vec + ang_s(m_i) + pi/2);
+    % Simulink 측 위상도 이제 sin 기준 + Vi fundamental = 0 deg 기준으로 저장된다.
+    i_m = sqrt(2) * mag_s(m_i) .* sin(m*theta_vec + ang_s(m_i));
     
     is_total_s = is_total_s + i_m;
     if m == 1
@@ -232,7 +230,7 @@ yline(0, 'k-', 'LineWidth', 1.2);  % y=0 수평 실선
 
 grid on;
 legend('Total Current (All Harmonics)', 'Fundamental (m=1)', 'Higher Harmonics (m \geq 3)', ...
-       'Phase = 0\circ', 'y = 0', 'Location', 'best');
+       'Phase = 0\circ', 'y = 0', 'ation', 'best');
 xlabel('Phase \theta [deg]');
 ylabel('Current [A]');
 title(sprintf('Simulink Reconstructed Time Waveform (\\delta = %.4f)', target_delta));

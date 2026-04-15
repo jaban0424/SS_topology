@@ -1,4 +1,4 @@
-           %% SS_sweep_delta_for_phi_Sumulink_260407.m
+%% SS_sweep_delta_for_phi_Sumulink_260407.m
 % =========================================================================
 % [버전 기록]
 % v1.1 : (2026-04-07 21:30:00)
@@ -122,10 +122,12 @@ for idx = 1:num_points
     end
     
     % 특정 측정 윈도우 내에서 기본파 페이저 추출
-    Vi_Ph  = local_calc_f0_phasor_only(Vi_ts, SS_Freq, tStart_measure, tEnd_measure);
-    Vac_Ph = local_calc_f0_phasor_only(Vac_ts, SS_Freq, tStart_measure, tEnd_measure);
+    Vi_Ph_cos  = local_calc_f0_phasor_only(Vi_ts, SS_Freq, tStart_measure, tEnd_measure);
+    Vac_Ph_cos = local_calc_f0_phasor_only(Vac_ts, SS_Freq, tStart_measure, tEnd_measure);
+    Vi_Ph  = 1j * Vi_Ph_cos;
+    Vac_Ph = 1j * Vac_Ph_cos;
     
-    % 상대 위상 계산 (Vi 기준)
+    % 상대 위상 계산 (Vi 기준, sin phasor 기준)
     phi_meas_rad = angle(Vac_Ph) - angle(Vi_Ph);
     phi_meas_deg = rad2deg(phi_meas_rad);
     
@@ -149,12 +151,17 @@ for idx = 1:num_points
         % 주어진 m_list에 대해 고조파 페이저 추출
         for m_idx = 1:length(m_list)
             m = m_list(m_idx);
-            % local_calc_f0_phasor_only 를 고조파 주파수(m * f0)로 응용 계산
-            harmonic_phasor = local_calc_f0_phasor_only(Is_ts, m * SS_Freq, tStart_measure, tEnd_measure);
+            % 적분으로 얻은 값은 cos 기준 phasor이므로 sin 기준으로 변환한다.
+            harmonic_phasor_cos = local_calc_f0_phasor_only(Is_ts, m * SS_Freq, tStart_measure, tEnd_measure);
+            harmonic_phasor_sin = 1j * harmonic_phasor_cos;
+
+            % Vi fundamental의 sin 위상을 절대 0도로 두기 위해 시간원점 기준을 이동한다.
+            harmonic_phasor_rel = harmonic_phasor_sin * exp(-1j * m * angle(Vi_Ph));
+
             % f0의 m배 주파수에 해당하는 peak 페이저이므로, RMS로 변환
-            Ism_sim_mag_all(m_idx, idx) = abs(harmonic_phasor) / sqrt(2);
-            % 위상 각도 (rad) 저장
-            Ism_sim_ang_all(m_idx, idx) = angle(harmonic_phasor);
+            Ism_sim_mag_all(m_idx, idx) = abs(harmonic_phasor_rel) / sqrt(2);
+            % 위상 각도 (rad) 저장: sin 기준 + Vi fundamental = 0 deg 기준
+            Ism_sim_ang_all(m_idx, idx) = angle(harmonic_phasor_rel);
         end
     end
 end

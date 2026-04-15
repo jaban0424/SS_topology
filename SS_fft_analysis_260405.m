@@ -19,7 +19,7 @@ f0 = 85e3;       % 기본 주파수 (Hz)
 T = 1 / f0;      % 1주기 시간 (s)
 
 tEnd = 6e-3;     % 측정 끝점
-num_periods = 10; % 채취할 주기 수 (2주기로 축소)
+num_periods = 2; % 채취할 주기 수 (2주기로 축소)
 tStart = tEnd - num_periods * T;
 
 fprintf('\n대상 신호: "%s"\n', targetSignalName);
@@ -101,7 +101,8 @@ for i = 1:length(n_list)
     % Vi fundamental의 위상을 시간원점으로 사용한다.
     % 즉, 각 n차 위상에서 n * angle(Vi_1) 만큼 빼서 "Vin = 0 deg" 축으로 정렬한다.
     C_list_rel(i) = C_list_sin(i) * exp(-1j * n * ref_fund_ang);
-    x_individual_harmonics(:, i) = abs(C_list_rel(i)) * sin(n * w0 * t_uni + angle(C_list_rel(i)));
+    % 실제 파형 복원은 원래 시간축을 유지해야 하므로 절대(sin 기준) 위상을 사용한다.
+    x_individual_harmonics(:, i) = abs(C_list_sin(i)) * sin(n * w0 * t_uni + angle(C_list_sin(i)));
     if n <= 9
         fprintf('%2d차 고조파: 최대진폭 %8.4f, 위상 %7.2f도\n', n, abs(C_list_rel(i)), angle(C_list_rel(i))*180/pi);
     end
@@ -114,8 +115,8 @@ x_harmonics_sum = sum(x_individual_harmonics(:, 2:end), 2);
 % == 5. 결과 그래프 ==
 f = figure('Name', sprintf('FFT Analysis: %s', targetSignalName), 'Position', [100, 100, 1200, 800], 'Color', 'w');
 
-% check_formulars와 동일한 sin 기준 + Vi fundamental = 0 deg 기준 위상 헬퍼
-t_phase_calc = @(n) -angle(C_list_rel(n)) / (n * w0);
+% 그래프에 표시하는 위상선은 실제 복원된 파형과 같은 절대(sin 기준) 위상을 사용한다.
+t_phase_calc = @(n) -angle(C_list_sin(n)) / (n * w0);
 T_n = @(n) (2*pi) / (n * w0);
 
 % (1) 원신호
