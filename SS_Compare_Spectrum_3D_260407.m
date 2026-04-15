@@ -1,13 +1,17 @@
 %% SS_Compare_Spectrum_3D_260407.m
 % 이 스크립트는 수식(formula)과 시뮬레이션(Simulink) 환경 양쪽에서 
 % delta sweep을 수행하고, 2차측 전류의 특정 고조파 크기 및 위상 기반
-% 3D 주파수 스펙트럼(surf, scatter3 등)을 중첩하여 비교합니다.
+% 3D 주파수 스펙트럼(surf, scatter3 등)을 중첩하여 비교합 니다.
 %
 % =========================================================================
-% [현재버전] v1.3
-% [마지막 수정시각] 2026/04/15 21:24:46 KST
+% [현재버전] v1.4
+% [마지막 수정시각] 2026/04/16 00:24:07 KST
 %
 % [버전 기록]
+% v1.4 : (2026-04-16 00:24:07)
+%        - 기존 delta-phi 비교 figure를 phi, phi1, phi2 3개 subplot 구조로 확장
+%        - phi1 = Is 기본파 위상, phi2 = phi - phi1 을 Formula / Simulink FFT 기준으로 계산
+%        - 비교용 파생 위상(phi1, phi2) 변수를 후처리용 보존 변수 목록에 추가
 % v1.3 : (2026-04-15 21:24:46)
 %        - sweep 스크립트의 개별 figure 출력을 끄고 compare가 필요한 figure만 직접 생성하도록 구조 정리
 %        - Formula delta-phi 와 Simulink delta-phi 그래프를 하나의 figure로 통합
@@ -78,18 +82,47 @@ M_list_no_fund = m_list(plot_idx_no_fund);
 [DeltaGrid, MGrid] = meshgrid(delta_list, M_list_plot);
 [DeltaGrid2, MGrid2] = meshgrid(delta_list, M_list_no_fund);
 
+% 파생 위상 지표
+idx_fund = find(m_list == 1, 1);
+if isempty(idx_fund)
+    error('m_list 안에 기본파 m=1이 없습니다.');
+end
+
+phi1_formula_deg = wrapTo180(rad2deg(Ism_ang_formula(idx_fund, :)));
+phi1_sim_deg = wrapTo180(rad2deg(Ism_ang_simulink(idx_fund, :)));
+phi2_formula_deg = wrapTo180(phi_formula_deg - phi1_formula_deg);
+phi2_sim_deg = wrapTo180(phi_sim_deg_compare - phi1_sim_deg);
+
 %% ===================== 4. 통합 Delta-Phi 비교 플롯 =====================
 fprintf('\n\n=======================================================\n');
 fprintf(' [3단계] 통합 Delta-Phi 시각화\n');
 fprintf('=======================================================\n');
 
-figure('Name', 'Delta-Phi Comparison', 'Color', 'w', 'Position', [100 180 820 520]);
+figure('Name', 'Delta-Phi Metrics Comparison', 'Color', 'w', 'Position', [100 120 840 860]);
+
+subplot(3,1,1);
 plot(delta_list, phi_formula_deg, '-ob', 'LineWidth', 1.8, 'MarkerSize', 6, 'MarkerFaceColor', 'b'); hold on;
 plot(delta_list, phi_sim_deg_compare, '-xr', 'LineWidth', 1.8, 'MarkerSize', 8);
 grid on;
+ylabel('\phi [deg]');
+title('Formula vs Simulink: \phi vs Detuning \delta');
+legend('Formula', 'Simulink', 'Location', 'best');
+
+subplot(3,1,2);
+plot(delta_list, phi1_formula_deg, '-ob', 'LineWidth', 1.8, 'MarkerSize', 6, 'MarkerFaceColor', 'b'); hold on;
+plot(delta_list, phi1_sim_deg, '-xr', 'LineWidth', 1.8, 'MarkerSize', 8);
+grid on;
+ylabel('\phi_1 [deg]');
+title('\phi_1 (Phase of Fundamental I_s) vs Detuning \delta');
+legend('Formula', 'Simulink', 'Location', 'best');
+
+subplot(3,1,3);
+plot(delta_list, phi2_formula_deg, '-ob', 'LineWidth', 1.8, 'MarkerSize', 6, 'MarkerFaceColor', 'b'); hold on;
+plot(delta_list, phi2_sim_deg, '-xr', 'LineWidth', 1.8, 'MarkerSize', 8);
+grid on;
 xlabel('Detuning \delta');
-ylabel('Relative Phase \phi [deg]');
-title('Formula vs Simulink: Relative Phase \phi vs Detuning \delta');
+ylabel('\phi_2 [deg]');
+title('\phi_2 = \phi - \phi_1 vs Detuning \delta');
 legend('Formula', 'Simulink', 'Location', 'best');
 
 %% ===================== 5. 통합 3D 플롯 (m=1 제외) =====================
@@ -263,8 +296,8 @@ end
 
 % 4. 사용하지 않는 큰 임시 변수 정리 (Workspace 정리)
 % 플롯에 사용한 핵심 결과 변수만 남기고, 자잘한 중간 변수는 메모리에서 제거
-keep_vars = {'Ism_mag_formula', 'Ism_mag_simulink', 'Ism_ang_formula', 'Ism_ang_simulink', 'phi_formula_deg', 'phi_sim_deg_compare', 'm_list', 'delta_list', 'max_m_plot'};
+keep_vars = {'Ism_mag_formula', 'Ism_mag_simulink', 'Ism_ang_formula', 'Ism_ang_simulink', 'phi_formula_deg', 'phi_sim_deg_compare', 'phi1_formula_deg', 'phi1_sim_deg', 'phi2_formula_deg', 'phi2_sim_deg', 'm_list', 'delta_list', 'max_m_plot'};
 % 남겨야 할 변수 제외하고 모두 지우는 코드 
-clearvars -except Ism_mag_formula Ism_mag_simulink Ism_ang_formula Ism_ang_simulink phi_formula_deg phi_sim_deg_compare m_list delta_list max_m_plot;
+clearvars -except Ism_mag_formula Ism_mag_simulink Ism_ang_formula Ism_ang_simulink phi_formula_deg phi_sim_deg_compare phi1_formula_deg phi1_sim_deg phi2_formula_deg phi2_sim_deg m_list delta_list max_m_plot;
 
 fprintf('잔류 코어 메모리 반환 및 캐시 정리가 완료되었습니다. (메모리 절약 최적화 완료)\n');
